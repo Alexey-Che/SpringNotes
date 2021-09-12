@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://thymeleaf.org">
+<head>
+    <title>Notes Application</title>
+</head>
+<body style="text-align:center">
+<h1>Notes Application</h1>
+<h2>
+    <a th:href="@{/notes/new}">Add New Note</a>
+</h2>
+<form th:action="@{notes/search}" method="get">
+    <label>
+        <input type="text" name="substring" th:value="${substring}" class="form-control" />
+    </label>
+    <button type="submit" class="btn btn-success">Search</button>
+</form>
+<div align="center">
+    <table border="1" cellpadding="5">
+        <caption><h2>List of Notes</h2></caption>
+        <tr>
+            <th>Title</th>
+            <th>Text</th>
+            <th colspan="3">Actions</th>
+        </tr>
+        <tr th:each="note: ${notes}">
+            <td>
+                <div>
+                    <a th:href="@{/notes/{id}(id=${note.getId()})}" th:text="${note.getTitle()}">note</a>
+                </div>
+            </td>
+            <td th:text="${note.getText()}">text</td>
+            <td>
+                <div>
+                    <a th:href="@{/notes/edit/{id}(id=${note.getId()})}">Edit</a>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <a th:href="@{/notes/delete/{id}(id=${note.getId()})}">Delete</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
