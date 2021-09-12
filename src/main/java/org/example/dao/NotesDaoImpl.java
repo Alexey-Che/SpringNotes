@@ -1,16 +1,22 @@
 package org.example.dao;
 
 import org.example.models.Note;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class NotesDaoImpl implements NotesDao {
 
-    private Connection jdbcConnection;
+    private final JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    public NotesDaoImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     private static final String SQL_GET_ALL = "SELECT * FROM spring_notes";
     private static final String SQL_SEARCH = "SELECT * FROM spring_notes WHERE LOWER(title) LIKE '%s' OR LOWER(text) LIKE '%s'";
@@ -19,58 +25,19 @@ public class NotesDaoImpl implements NotesDao {
     private static final String SQL_GET_ROW = "SELECT * FROM spring_notes WHERE id = ?";
     private static final String SQL_UPD_ROW = "UPDATE spring_notes SET title=?, text=? WHERE id=?";
 
-    protected void connect() throws SQLException {
-        if (jdbcConnection == null || jdbcConnection.isClosed()) {
-            try {
-                Class.forName("org.postgresql.Driver");
-            } catch (ClassNotFoundException e) {
-                throw new SQLException(e);
-            }
-            String jdbcURL = "jdbc:postgresql://127.0.0.1:5432/spring_course?currentSchema=public";
-            String jdbcUsername = "postgres";
-            String jdbcPassword = "postgres";
-            jdbcConnection = DriverManager.getConnection(
-                    jdbcURL, jdbcUsername, jdbcPassword);
-
-        }
-    }
-
-    protected void disconnect() throws SQLException {
-        if (jdbcConnection != null && !jdbcConnection.isClosed()) {
-            jdbcConnection.close();
-        }
-    }
-
-    public Note showNoteById(long id) throws SQLException {
-        connect();
-        PreparedStatement statement = jdbcConnection.prepareStatement(SQL_GET_ROW);
-        statement.setLong(1, id);
-        ResultSet resultSet = statement.executeQuery();
-        resultSet.next();
-        Note note = new Note();
-        note.setId(resultSet.getInt("id"));
-        note.setTitle(resultSet.getString("title"));
-        note.setText(resultSet.getString("text"));
-        disconnect();
-        return note;
+    public Note showNoteById(long id) {
+        return jdbcTemplate.query(SQL_GET_ROW, new Object[]{id}, new BeanPropertyRowMapper<>(Note.class))
+                .stream().findAny().orElse(null);
     }
 
     @Override
-    public void addNote(Note note) throws SQLException {
-        connect();
-        PreparedStatement statement = jdbcConnection.prepareStatement(SQL_INS_ROW);
-        statement.setString(1, note.getTitle());
-        statement.setString(2, note.getText());
-        statement.executeUpdate();
-        disconnect();
+    public void addNote(Note note) {
+        jdbcTemplate.update(SQL_INS_ROW, note.getTitle(), note.getText());
     }
 
     @Override
-    public List<Note> showAllNotes() throws SQLException {
-        connect();
-        List<Note> notes = new ArrayList<>();
-        PreparedStatement statement = jdbcConnection.prepareStatement(SQL_GET_ALL);
-        return getNotes(notes, statement);
+    public List<Note> showAllNotes() {
+        return jdbcTemplate.query(SQL_GET_ALL, new BeanPropertyRowMapper<>(Note.class));
     }
 
     private static String getSearchString(String searchString) {
@@ -79,43 +46,17 @@ public class NotesDaoImpl implements NotesDao {
     }
 
     @Override
-    public List<Note> searchBySubstring(String substring) throws SQLException {
-        connect();
-        List<Note> result = new ArrayList<>();
-        PreparedStatement statement = jdbcConnection.prepareStatement(getSearchString(substring));
-        return getNotes(result, statement);
-    }
-
-    private List<Note> getNotes(List<Note> result, PreparedStatement statement) throws SQLException {
-        ResultSet resultSet = statement.executeQuery();
-        while (resultSet.next()) {
-            Note note = new Note();
-            note.setId(resultSet.getInt("id"));
-            note.setTitle(resultSet.getString("title"));
-            note.setText(resultSet.getString("text"));
-            result.add(note);
-        }
-        disconnect();
-        return result;
+    public List<Note> searchBySubstring(String substring) {
+        return jdbcTemplate.query(getSearchString(substring), new BeanPropertyRowMapper<>(Note.class));
     }
 
     @Override
-    public void deleteNote(long id) throws SQLException {
-        connect();
-        PreparedStatement statement = jdbcConnection.prepareStatement(SQL_DEL_ROW);
-        statement.setInt(1, Math.toIntExact(id));
-        statement.executeUpdate();
-        disconnect();
+    public void deleteNote(long id) {
+        jdbcTemplate.update(SQL_DEL_ROW, id);
     }
 
     @Override
-    public void update(long id, Note note) throws SQLException {
-        connect();
-        PreparedStatement statement = jdbcConnection.prepareStatement(SQL_UPD_ROW);
-        statement.setString(1, note.getTitle());
-        statement.setString(2, note.getText());
-        statement.setLong(3, id);
-        statement.executeUpdate();
-        disconnect();
+    public void update(long id, Note note) {
+        jdbcTemplate.update(SQL_UPD_ROW, note.getTitle(), note.getText(), id);
     }
 }
