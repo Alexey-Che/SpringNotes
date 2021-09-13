@@ -9,11 +9,11 @@
 <div align="center">
     <form th:method="POST" th:action="@{/notes}" th:object="${note}">
         <label for="title">Enter title: </label>
-        <input type="text" th:field="*{title}" id="title"/>
+        <input type="text" th:field="*{title}" id="title" placeholder="between 2 and 20 characters"/>
         <div style="color: red" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
         <br/>
         <label for="text">Enter text: </label>
-        <input type="text" th:field="*{text}" id="text">
+        <input type="text" th:field="*{text}" id="text" placeholder="1 characters or more">
         <div style="color: red" th:if="${#fields.hasErrors('text')}" th:errors="*{text}"></div>
         <br/>
         <input type="submit" value="Save note">
