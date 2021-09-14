@@ -43,7 +43,9 @@ public class NotesController {
     @PostMapping
     public String createNote(@ModelAttribute("note") @Valid Note note,
                              BindingResult bindingResult) throws SQLException {
-        if (bindingResult.hasErrors()) return "new";
+        if (bindingResult.hasErrors()) {
+            return "new";
+        }
         notesDao.addNote(note);
         return "redirect:/notes";
     }
@@ -58,7 +60,9 @@ public class NotesController {
     public String update(@ModelAttribute("note") @Valid Note note,
                          BindingResult bindingResult,
                          @PathVariable("id") long id) throws SQLException {
-        if (bindingResult.hasErrors()) return "edit";
+        if (bindingResult.hasErrors()) {
+            return "edit";
+        }
         notesDao.update(id, note);
         return "redirect:/notes";
     }
