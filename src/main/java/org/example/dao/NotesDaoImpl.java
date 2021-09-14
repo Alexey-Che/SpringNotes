@@ -5,13 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Component
-
 public class NotesDaoImpl implements NotesDao {
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -28,26 +26,35 @@ public class NotesDaoImpl implements NotesDao {
     private static final String SQL_GET_ROW = "SELECT * FROM spring_notes WHERE id = :id";
     private static final String SQL_UPD_ROW = "UPDATE spring_notes SET title= :title, text= :text WHERE id= :id";
 
-
-    public Map<String, Object> createMap(Note note, Long id, String searchString) {
-        String search = "%" + searchString.toLowerCase() + "%";
+    public static Map<String, Object> createMap(Note note) {
         Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        params.put("titleSearch", search);
-        params.put("textSearch", search);
         params.put("title", note.getTitle());
         params.put("text", note.getText());
         return params;
     }
 
+    public static Map<String, Object> createSearchMap(String searchString){
+        String search = "%" + searchString.toLowerCase() + "%";
+        Map<String, Object> params = new HashMap<>();
+        params.put("titleSearch", search);
+        params.put("textSearch", search);
+        return params;
+    }
+
+    public static Map<String, Object> createIdMap(Long id){
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", id);
+        return params;
+    }
+
     public Note showNoteById(long id) {
-        return namedParameterJdbcTemplate.query(SQL_GET_ROW, createMap(new Note(), id, "null"), new BeanPropertyRowMapper<>(Note.class))
+        return namedParameterJdbcTemplate.query(SQL_GET_ROW, createIdMap(id), new BeanPropertyRowMapper<>(Note.class))
                 .stream().findAny().orElse(null);
     }
 
     @Override
     public void addNote(Note note) {
-        namedParameterJdbcTemplate.update(SQL_INS_ROW, createMap(note, null, "null"));
+        namedParameterJdbcTemplate.update(SQL_INS_ROW, createMap(note));
     }
 
     @Override
@@ -57,16 +64,18 @@ public class NotesDaoImpl implements NotesDao {
 
     @Override
     public List<Note> searchBySubstring(String substring) {
-        return namedParameterJdbcTemplate.query(SQL_SEARCH, createMap(new Note(), null, substring), new BeanPropertyRowMapper<>(Note.class));
+        return namedParameterJdbcTemplate.query(SQL_SEARCH, createSearchMap(substring), new BeanPropertyRowMapper<>(Note.class));
     }
 
     @Override
     public void deleteNote(long id) {
-        namedParameterJdbcTemplate.update(SQL_DEL_ROW, createMap(new Note(), id, "null"));
+        namedParameterJdbcTemplate.update(SQL_DEL_ROW, createIdMap(id));
     }
 
     @Override
     public void update(long id, Note note) {
-        namedParameterJdbcTemplate.update(SQL_UPD_ROW, createMap(note, id, "null"));
+        Map<String, Object> result = createIdMap(id);
+        result.putAll(createMap(note));
+        namedParameterJdbcTemplate.update(SQL_UPD_ROW, result);
     }
 }
