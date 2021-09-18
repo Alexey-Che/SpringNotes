@@ -7,9 +7,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import javax.validation.Valid;
 import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/notes")
@@ -25,7 +26,7 @@ public class NotesController {
 
     @GetMapping()
     public String listNotes(Model model) throws SQLException {
-        model.addAttribute("notes", notesDao.showAllNotes());
+        model.addAttribute("notes", notesDao.showAllNotes().stream().sorted(Comparator.comparing(Note::getTitle)).collect(Collectors.toList()));
         return "list";
     }
 

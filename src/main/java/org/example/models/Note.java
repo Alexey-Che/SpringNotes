@@ -1,15 +1,25 @@
 package org.example.models;
 
+import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 
+@Entity
+@Table(name = "spring_notes")
 public class Note {
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
     @NotEmpty(message = "title field cannot be empty")
     @Size(min = 2, max = 20, message = "title should be between 2 and 20 characters")
+    @Column(name = "title")
     private String title;
+
     @Size(min = 1, message = "need more text")
+    @Column(name = "text")
     private String text;
-    private long id;
 
     public Note() {
     }
